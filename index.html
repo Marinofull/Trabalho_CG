@@ -65,18 +65,23 @@
 <script type="text/javascript" src="ar-libs/cv.js"></script> 
 <script type="text/javascript" src="ar-libs/aruco.js"></script> 
 <script type="text/javascript" src="axis.js"></script>
+<style type="text/css">
+	#content {
+		position:absolute;
+		left:50%;
+		margin-left:-320px;
+		}
+</style>
 
 </head>
 
 <body onload="webGLStart();">
-    <h1>Trabalho</h1><br />
-    <p>Realidade Aumentada em WebGL.</p>
-    <br/>
-    <div id="output"> </div>
-    <br/>
-	<canvas id="videoGL" width="640" height="480" style="visibility: visible;"></canvas>
-	<video id="monitor" autoplay width="320" height="240" style="visibility: hidden;"></video>
-	<canvas id="videoImage" width="512" height="512" style="visibility: hidden;"></canvas>
+    <div id="content">
+	    <div id="output"> </div>
+		<canvas id="videoGL" width="640" height="480" style="visibility: visible;"></canvas>
+		<video id="monitor" autoplay width="320" height="240" style="visibility: hidden;"></video>
+		<canvas id="videoImage" width="512" height="512" style="visibility: hidden;"></canvas>
+	</div>
 </body>
 
 </html>
