@@ -493,6 +493,10 @@ function drawCorners(markers){
 function updateScenes(markers){
   var corners, corner, pose, i;
   
+  	if(markers[0].id == 1){
+        	testee();
+     	}
+
 	if (markers.length > 0) {
 		
 		corners = markers[0].corners;
@@ -502,6 +506,7 @@ function updateScenes(markers){
 			
 			corner.x = corner.x - (canvas.width / 2);
 			corner.y = (canvas.height / 2) - corner.y;
+			console.log(" meu id eh: " + markers[i].id);
 			}
 		
 		pose = posit.pose(corners);
