@@ -57,7 +57,35 @@
 	}
 </script>
 
+<script id="modelShader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	
+	varying vec4 vColor;
 
+	uniform mat4 uPMatrix;
+	uniform mat4 uMVMatrix;
+		
+	void main(void) {
+		
+ 		gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition.xyz, 1.0);
+ 		
+		vColor = aVertexColor;
+	}
+
+</script>
+
+<script id="modelShader-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		gl_FragColor = vColor;
+	}
+</script>
+
+<!--
 <script id="noMaterial-vs" type="x-shader/x-vertex">
 	attribute vec3 aVPosition;
 	attribute vec3 aVNorm;
@@ -109,7 +137,7 @@
 		
 		gl_FragColor = clamp(ambient + diffuse + specular, 0.0, 1.0);
 	}
-</script>
+</script>-->
 
 
 <script type="text/javascript" src="lib/webgl-utils.js"></script>
@@ -122,8 +150,8 @@
 <script type="text/javascript" src="ar-libs/cv.js"></script> 
 <script type="text/javascript" src="ar-libs/aruco.js"></script> 
 <script type="text/javascript" src="axis.js"></script>
-<script type="text/javascript" src="alc.js"></script>
-<!-- <script type="text/javascript" src="buda.js"></script> -->
+<!--<script type="text/javascript" src="alc.js"></script>
+ <script type="text/javascript" src="buda.js"></script> -->
 <style type="text/css">
 	#content {
 		position:absolute;
