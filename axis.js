@@ -20,344 +20,24 @@ var transMat 	= new Matrix4();
 var scaleMat 	= new Matrix4();
 
 
-var yaw 		= 0.0,
-	pitch 		= 0.0,
-	roll		= 0.0;
+var z 		= 0.0,
+	y 		= 0.0,
+	x		= 0.0;
 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 window.URL = window.URL || window.webkitURL;
 
-// ********************************************************
-// ********************************************************
-function gotStream(stream)  {
-	if (window.URL) {   
-		video.src = window.URL.createObjectURL(stream);   } 
-	else {   
-		video.src = stream;   
-		}
-
-	video.onerror = function(e) {   
-							stream.stop();   
-							};
-	stream.onended = noStream;
-}
-
-// ********************************************************
-// ********************************************************
-function noStream(e) {
-	var msg = "No camera available.";
-	
-	if (e.code == 1) {   
-		msg = "User denied access to use camera.";   
-		}
-	document.getElementById("output").textContent = msg;
-}
-
-// ********************************************************
-// ********************************************************
-function initGL(canvas) {
-	
-	var gl = canvas.getContext("webgl");
-	if (!gl) {
-		return (null);
-		}
-	
-	gl.viewportWidth 	= canvas.width;
-	gl.viewportHeight 	= canvas.height;
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-	gl.clearColor(0.0, 0.0, 0.0, 1.0);
-	return gl;
-}
-
-// ********************************************************
-// ********************************************************
-function initBaseImage() {
-	
-var baseImage = new Object(); 
-var vPos = new Array;
-var vTex = new Array;
-
-	vPos.push(-1.0); 	// V0
-	vPos.push(-1.0);
-	vPos.push( 0.0);
-	vPos.push( 1.0);	// V1
-	vPos.push(-1.0);
-	vPos.push( 0.0);
-	vPos.push( 1.0);	// V2
-	vPos.push( 1.0);
-	vPos.push( 0.0);
-	vPos.push(-1.0); 	// V0
-	vPos.push(-1.0);
-	vPos.push( 0.0);
-	vPos.push( 1.0);	// V2
-	vPos.push( 1.0);
-	vPos.push( 0.0);
-	vPos.push(-1.0);	// V3
-	vPos.push( 1.0);
-	vPos.push( 0.0);
-			
-	vTex.push( 0.0); 	// V0
-	vTex.push( 0.0);
-	vTex.push( 1.0);	// V1
-	vTex.push( 0.0);
-	vTex.push( 1.0);	// V2
-	vTex.push( 1.0);
-	vTex.push( 0.0); 	// V0
-	vTex.push( 0.0);
-	vTex.push( 1.0);	// V2
-	vTex.push( 1.0);
-	vTex.push( 0.0);	// V3
-	vTex.push( 1.0);
-		
-	baseImage.vertexBuffer = gl.createBuffer();
-	if (baseImage.vertexBuffer) {		
-		gl.bindBuffer(gl.ARRAY_BUFFER, baseImage.vertexBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vPos), gl.STATIC_DRAW);
-		}
-	else
-		alert("ERROR: can not create vertexBuffer");
-	
-	baseImage.textureBuffer = gl.createBuffer();
-	if (baseImage.textureBuffer) {		
-		gl.bindBuffer(gl.ARRAY_BUFFER, baseImage.textureBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vTex), gl.STATIC_DRAW);
-		}
-	else
-		alert("ERROR: can not create textureBuffer");
-
-	baseImage.numItems = vPos.length/3.0;
-	
-	return baseImage;
-}
-
 
 // ********************************************************
 // ********************************************************
 
-function initAxisVertexBuffer() {
-
-var axis	= new Object(); // Utilize Object object to return multiple buffer objects
-var vPos 	= new Array;
-var vColor 	= new Array;
-
-	// X Axis
-	// V0
-	vPos.push(0.0);
-	vPos.push(0.0);
-	vPos.push(0.0);
-	vColor.push(1.0);
-	vColor.push(0.0);
-	vColor.push(0.0);
-	vColor.push(1.0);
-	// V1
-	vPos.push(1.0);
-	vPos.push(0.0);
-	vPos.push(0.0);
-	vColor.push(1.0);
-	vColor.push(0.0);
-	vColor.push(0.0);
-	vColor.push(1.0);
-
-	// Y Axis
-	// V0
-	vPos.push(0.0);
-	vPos.push(0.0);
-	vPos.push(0.0);
-	vColor.push(0.0);
-	vColor.push(1.0);
-	vColor.push(0.0);
-	vColor.push(1.0);
-	// V2
-	vPos.push(0.0);
-	vPos.push(1.0);
-	vPos.push(0.0);
-	vColor.push(0.0);
-	vColor.push(1.0);
-	vColor.push(0.0);
-	vColor.push(1.0);
-
-	// Z Axis
-	// V0
-	vPos.push(0.0);
-	vPos.push(0.0);
-	vPos.push(0.0);
-	vColor.push(0.0);
-	vColor.push(0.0);
-	vColor.push(1.0);
-	vColor.push(1.0);
-	// V3
-	vPos.push(0.0);
-	vPos.push(0.0);
-	vPos.push(1.0);
-	vColor.push(0.0);
-	vColor.push(0.0);
-	vColor.push(1.0);
-	vColor.push(1.0);
-	
-	axis.vertexBuffer = gl.createBuffer();
-	if (axis.vertexBuffer) {		
-		gl.bindBuffer(gl.ARRAY_BUFFER, axis.vertexBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vPos), gl.STATIC_DRAW);
-		}
-	else
-		alert("ERROR: can not create vertexBuffer");
-	
-	axis.colorBuffer = gl.createBuffer();
-	if (axis.colorBuffer) {		
-		gl.bindBuffer(gl.ARRAY_BUFFER, axis.colorBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vColor), gl.STATIC_DRAW);
-		}
-	else
-		alert("ERROR: can not create colorBuffer");
-
-	axis.numItems = vPos.length/3.0;
-	
-	return axis;
-}
-
-// ********************************************************
-// ********************************************************
-function drawTextQuad(o, shaderProgram, MVPMat) {
-	
-    try {
-    	gl.useProgram(shaderProgram);
-		}
-	catch(err){
-        alert(err);
-        console.error(err.description);
-    	}
-    	
- 	gl.uniformMatrix4fv(shaderProgram.uMVPMat, false, MVPMat.elements);
-   	
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, videoTexture);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, videoImage);
-	videoTexture.needsUpdate = false;	
-	gl.uniform1i(shaderProgram.SamplerUniform, 0);
-		
-	if (o.vertexBuffer != null) {
-		gl.bindBuffer(gl.ARRAY_BUFFER, o.vertexBuffer);
-		gl.vertexAttribPointer(shaderProgram.vPositionAttr, 3, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(shaderProgram.vPositionAttr);  
-		}
-	else {
-		alert("o.vertexBuffer == null");
-		return;
-		}
-
-	if (o.textureBuffer != null) {
-		gl.bindBuffer(gl.ARRAY_BUFFER, o.textureBuffer);
-		gl.vertexAttribPointer(shaderProgram.vTexAttr, 2, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(shaderProgram.vTexAttr);
-		}
-	else {
-		alert("o.textureBuffer == null");
-  		return;
-		}
-   	
-	gl.drawArrays(gl.TRIANGLES, 0, o.numItems);
-}
-
-
-// ********************************************************
-// ********************************************************
-function drawAxis(o, shaderProgram, MVPMat) {
-
-    try {
-    	gl.useProgram(shaderProgram);
-		}
-	catch(err){
-        alert(err);
-        console.error(err.description);
-    	}
-    	
- 	gl.uniformMatrix4fv(shaderProgram.uMVPMat, false, MVPMat.elements);
-   	
-	if (o.vertexBuffer != null) {
-		gl.bindBuffer(gl.ARRAY_BUFFER, o.vertexBuffer);
-		gl.vertexAttribPointer(shaderProgram.vPositionAttr, 3, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(shaderProgram.vPositionAttr);  
-		}
-	else {
-		alert("o.vertexBuffer == null");
-		return;
-		}
-
-	if (o.colorBuffer != null) {
-		gl.bindBuffer(gl.ARRAY_BUFFER, o.colorBuffer);
-		gl.vertexAttribPointer(shaderProgram.vColorAttr, 4, gl.FLOAT, false, 0, 0);
-		gl.enableVertexAttribArray(shaderProgram.vColorAttr);
-		}
-	else {
-		alert("o.colorBuffer == null");
-  		return;
-		}
-
-	gl.drawArrays(gl.LINES, 0, o.numItems);
-}
-
-// ********************************************************
-// ********************************************************
-function drawScene(markers) {
-	
-var modelMat = new Matrix4();
-var ViewMat = new Matrix4();
-var ProjMat = new Matrix4();
-var MVPMat 	= new Matrix4();
-
-
-	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-	gl.clear(gl.COLOR_BUFFER_BIT);
-	
-	if (!videoTexture.needsUpdate) 
-		return;
-	
-	modelMat.setIdentity();
-	ViewMat.setIdentity();
-	ProjMat.setIdentity();
-	ProjMat.setOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-	
-	MVPMat.setIdentity();
-    MVPMat.multiply(ProjMat);
-    MVPMat.multiply(ViewMat);
-    MVPMat.multiply(modelMat);
-		
-	drawTextQuad(baseTexture, shaderBaseImage, MVPMat);
-	
-	updateScenes(markers);
-   		
-    ViewMat.setLookAt(	0.0, 0.0, 0.0,
-    					0.0, 0.0, -1.0,
-    					0.0, 1.0, 0.0 );
-    
-	ProjMat.setPerspective(40.0, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0);
-	
-	modelMat.setIdentity();
-	modelMat.multiply(transMat);
-	modelMat.multiply(rotMat);
-	modelMat.multiply(scaleMat);
-	
-	MVPMat.setIdentity();
-    MVPMat.multiply(ProjMat);
-    MVPMat.multiply(ViewMat);
-    MVPMat.multiply(modelMat);
-	
-	drawAxis(axis, shaderAxis, MVPMat);
-}
-
-// ********************************************************
-// ********************************************************
-function initTexture() {
-
-	videoTexture = gl.createTexture();		
-	gl.bindTexture(gl.TEXTURE_2D, videoTexture);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-	videoTexture.needsUpdate = false;
-}
-
-// ********************************************************
-// ********************************************************
+// Chama gotStream()
+// Depois Chama noStream()
+// Depois Chama initGL()
+// Depois Chama initBaseImage()
+// Depois Chama initTexture()
+// Depois Chama initAxisVertexBuffer()
+// Depois Chama animate()
 function webGLStart() {
 
 	if (!navigator.getUserMedia) {
@@ -438,6 +118,212 @@ function webGLStart() {
 
 // ********************************************************
 // ********************************************************
+
+// Chama noStream()
+function gotStream(stream)  {
+	if (window.URL) {   
+		video.src = window.URL.createObjectURL(stream);   } 
+	else {   
+		video.src = stream;   
+		}
+
+	video.onerror = function(e) {   
+							stream.stop();   
+							};
+	stream.onended = noStream;
+}
+
+// ********************************************************
+// ********************************************************
+
+function noStream(e) {
+	var msg = "No camera available.";
+	
+	if (e.code == 1) {   
+		msg = "User denied access to use camera.";   
+		}
+	document.getElementById("output").textContent = msg;
+}
+
+// ********************************************************
+// ********************************************************
+
+function initGL(canvas) {
+	
+	var gl = canvas.getContext("webgl");
+	if (!gl) {
+		return (null);
+		}
+	
+	gl.viewportWidth 	= canvas.width;
+	gl.viewportHeight 	= canvas.height;
+	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	return gl;
+}
+
+// ********************************************************
+// ********************************************************
+
+function initBaseImage() {
+	
+	var baseImage = new Object(); 
+	var vPos = new Array;
+	var vTex = new Array;
+
+	vPos.push(-1.0); 	// V0
+	vPos.push(-1.0);
+	vPos.push( 0.0);
+	vPos.push( 1.0);	// V1
+	vPos.push(-1.0);
+	vPos.push( 0.0);
+	vPos.push( 1.0);	// V2
+	vPos.push( 1.0);
+	vPos.push( 0.0);
+	vPos.push(-1.0); 	// V0
+	vPos.push(-1.0);
+	vPos.push( 0.0);
+	vPos.push( 1.0);	// V2
+	vPos.push( 1.0);
+	vPos.push( 0.0);
+	vPos.push(-1.0);	// V3
+	vPos.push( 1.0);
+	vPos.push( 0.0);
+			
+	vTex.push( 0.0); 	// V0
+	vTex.push( 0.0);
+	vTex.push( 1.0);	// V1
+	vTex.push( 0.0);
+	vTex.push( 1.0);	// V2
+	vTex.push( 1.0);
+	vTex.push( 0.0); 	// V0
+	vTex.push( 0.0);
+	vTex.push( 1.0);	// V2
+	vTex.push( 1.0);
+	vTex.push( 0.0);	// V3
+	vTex.push( 1.0);
+		
+	baseImage.vertexBuffer = gl.createBuffer();
+	if (baseImage.vertexBuffer) {		
+		gl.bindBuffer(gl.ARRAY_BUFFER, baseImage.vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vPos), gl.STATIC_DRAW);
+		}
+	else
+		alert("ERROR: can not create vertexBuffer");
+	
+	baseImage.textureBuffer = gl.createBuffer();
+	if (baseImage.textureBuffer) {		
+		gl.bindBuffer(gl.ARRAY_BUFFER, baseImage.textureBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vTex), gl.STATIC_DRAW);
+		}
+	else
+		alert("ERROR: can not create textureBuffer");
+
+	baseImage.numItems = vPos.length/3.0;
+	
+	return baseImage;
+}
+
+// ********************************************************
+// ********************************************************
+
+function initTexture() {
+
+	videoTexture = gl.createTexture();		
+	gl.bindTexture(gl.TEXTURE_2D, videoTexture);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	videoTexture.needsUpdate = false;
+}
+
+// ********************************************************
+// ********************************************************
+
+function initAxisVertexBuffer() {
+
+	var axis	= new Object(); // Utilize Object object to return multiple buffer objects
+	var vPos 	= new Array;
+	var vColor 	= new Array;
+
+	// X Axis
+	// V0
+	vPos.push(0.0);
+	vPos.push(0.0);
+	vPos.push(0.0);
+	vColor.push(1.0);
+	vColor.push(0.0);
+	vColor.push(0.0);
+	vColor.push(1.0);
+	// V1
+	vPos.push(1.0);
+	vPos.push(0.0);
+	vPos.push(0.0);
+	vColor.push(1.0);
+	vColor.push(0.0);
+	vColor.push(0.0);
+	vColor.push(1.0);
+
+	// Y Axis
+	// V0
+	vPos.push(0.0);
+	vPos.push(0.0);
+	vPos.push(0.0);
+	vColor.push(0.0);
+	vColor.push(1.0);
+	vColor.push(0.0);
+	vColor.push(1.0);
+	// V2
+	vPos.push(0.0);
+	vPos.push(1.0);
+	vPos.push(0.0);
+	vColor.push(0.0);
+	vColor.push(1.0);
+	vColor.push(0.0);
+	vColor.push(1.0);
+
+	// Z Axis
+	// V0
+	vPos.push(0.0);
+	vPos.push(0.0);
+	vPos.push(0.0);
+	vColor.push(0.0);
+	vColor.push(0.0);
+	vColor.push(1.0);
+	vColor.push(1.0);
+	// V3
+	vPos.push(0.0);
+	vPos.push(0.0);
+	vPos.push(1.0);
+	vColor.push(0.0);
+	vColor.push(0.0);
+	vColor.push(1.0);
+	vColor.push(1.0);
+	
+	axis.vertexBuffer = gl.createBuffer();
+	if (axis.vertexBuffer) {		
+		gl.bindBuffer(gl.ARRAY_BUFFER, axis.vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vPos), gl.STATIC_DRAW);
+		}
+	else
+		alert("ERROR: can not create vertexBuffer");
+	
+	axis.colorBuffer = gl.createBuffer();
+	if (axis.colorBuffer) {		
+		gl.bindBuffer(gl.ARRAY_BUFFER, axis.colorBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vColor), gl.STATIC_DRAW);
+		}
+	else
+		alert("ERROR: can not create colorBuffer");
+
+	axis.numItems = vPos.length/3.0;
+	
+	return axis;
+}
+
+// ********************************************************
+// ********************************************************
+
+// Chama render()
 function animate() {
     requestAnimationFrame( animate );
 	render();		
@@ -445,6 +331,9 @@ function animate() {
 
 // ********************************************************
 // ********************************************************
+
+// Chama drawCorners()
+// Depois Chama drawScene()
 function render() {	
 	
 	if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
@@ -462,6 +351,7 @@ function render() {
 
 // ********************************************************
 // ********************************************************
+
 function drawCorners(markers){
   var corners, corner, i, j;
 
@@ -490,13 +380,108 @@ function drawCorners(markers){
 
 // ********************************************************
 // ********************************************************
+
+// Chama drawTextQuad()
+// Depois Chama updateScenes()
+// Depois Chama drawAxis()
+function drawScene(markers) {
+	
+	var modelMat = new Matrix4();
+	var ViewMat = new Matrix4();
+	var ProjMat = new Matrix4();
+	var MVPMat 	= new Matrix4();
+
+
+	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+	gl.clear(gl.COLOR_BUFFER_BIT);
+	
+	if (!videoTexture.needsUpdate) 
+		return;
+	
+	modelMat.setIdentity();
+	ViewMat.setIdentity();
+	ProjMat.setIdentity();
+	ProjMat.setOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
+	
+	MVPMat.setIdentity();
+    MVPMat.multiply(ProjMat);
+    MVPMat.multiply(ViewMat);
+    MVPMat.multiply(modelMat);
+	
+	//	
+	drawTextQuad(baseTexture, shaderBaseImage, MVPMat);
+	// Busca as coodenadas
+	updateScenes(markers);
+   		
+    ViewMat.setLookAt(	1.0, 0.0, 0.0,
+    					1.0, 0.0, -1.0,
+    					1.0, 1.0, 0.0 );
+
+	ProjMat.setPerspective(40.0, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0);
+	
+	modelMat.setIdentity();
+	modelMat.multiply(transMat);
+	modelMat.multiply(rotMat);
+	modelMat.multiply(scaleMat);
+	
+	MVPMat.setIdentity();
+    MVPMat.multiply(ProjMat);
+    MVPMat.multiply(ViewMat);
+    MVPMat.multiply(modelMat);
+	
+	drawAxis(axis, shaderAxis, MVPMat);
+}
+
+// ********************************************************
+// ********************************************************
+
+function drawTextQuad(o, shaderProgram, MVPMat) {
+	
+    try {
+    	gl.useProgram(shaderProgram);
+		}
+	catch(err){
+        alert(err);
+        console.error(err.description);
+    	}
+    	
+ 	gl.uniformMatrix4fv(shaderProgram.uMVPMat, false, MVPMat.elements);
+   	
+	gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture(gl.TEXTURE_2D, videoTexture);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, videoImage);
+	videoTexture.needsUpdate = false;	
+	gl.uniform1i(shaderProgram.SamplerUniform, 0);
+		
+	if (o.vertexBuffer != null) {
+		gl.bindBuffer(gl.ARRAY_BUFFER, o.vertexBuffer);
+		gl.vertexAttribPointer(shaderProgram.vPositionAttr, 3, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(shaderProgram.vPositionAttr);  
+		}
+	else {
+		alert("o.vertexBuffer == null");
+		return;
+		}
+
+	if (o.textureBuffer != null) {
+		gl.bindBuffer(gl.ARRAY_BUFFER, o.textureBuffer);
+		gl.vertexAttribPointer(shaderProgram.vTexAttr, 2, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(shaderProgram.vTexAttr);
+		}
+	else {
+		alert("o.textureBuffer == null");
+  		return;
+		}
+   	
+	gl.drawArrays(gl.TRIANGLES, 0, o.numItems);
+}
+
+// ********************************************************
+// ********************************************************
+
 function updateScenes(markers){
   var corners, corner, pose, i;
   
-  	if(markers[0].id == 1){
-        	testee();
-     	}
-
 	if (markers.length > 0) {
 		
 		corners = markers[0].corners;
@@ -506,22 +491,22 @@ function updateScenes(markers){
 			
 			corner.x = corner.x - (canvas.width / 2);
 			corner.y = (canvas.height / 2) - corner.y;
-			console.log(" meu id eh: " + markers[i].id);
 			}
 		
 		pose = posit.pose(corners);
 		
-		yaw 	= Math.atan2(pose.bestRotation[0][2], pose.bestRotation[2][2]) * 180.0/Math.PI;
-		pitch 	= -Math.asin(-pose.bestRotation[1][2]) * 180.0/Math.PI;
-		roll 	= Math.atan2(pose.bestRotation[1][0], pose.bestRotation[1][1]) * 180.0/Math.PI;
+		z 	= Math.atan2(pose.bestRotation[0][2], pose.bestRotation[2][2]) * 180.0/Math.PI;
+		y 	= -Math.asin(-pose.bestRotation[1][2]) * 180.0/Math.PI;
+		x 	= Math.atan2(pose.bestRotation[1][0], pose.bestRotation[1][1]) * 180.0/Math.PI;
 		
 		rotMat.setIdentity();
-		rotMat.rotate(yaw, 0.0, 1.0, 0.0);
-		rotMat.rotate(pitch, 1.0, 0.0, 0.0);
-		rotMat.rotate(roll, 0.0, 0.0, 1.0);
+		rotMat.rotate(z, 0.0, 1.0, 0.0);
+		rotMat.rotate(y, 1.0, 0.0, 0.0);
+		rotMat.rotate(x, 0.0, 0.0, 1.0);
 		
 		transMat.setIdentity();
 		transMat.translate(pose.bestTranslation[0], pose.bestTranslation[1], -pose.bestTranslation[2]);
+		
 		scaleMat.setIdentity();
 		scaleMat.scale(modelSize, modelSize, modelSize);
 		
@@ -532,8 +517,46 @@ function updateScenes(markers){
 		transMat.setIdentity();
 		rotMat.setIdentity();
 		scaleMat.setIdentity();
-		yaw 	= 0.0;
-		pitch 	= 0.0;
-		roll 	= 0.0;
+		z 	= 0.0;
+		y 	= 0.0;
+		x 	= 0.0;
 		}
 };
+
+// ********************************************************
+// ********************************************************
+
+function drawAxis(o, shaderProgram, MVPMat) {
+
+    try {
+    	gl.useProgram(shaderProgram);
+		}
+	catch(err){
+        alert(err);
+        console.error(err.description);
+    	}
+    	
+ 	gl.uniformMatrix4fv(shaderProgram.uMVPMat, false, MVPMat.elements);
+   	
+	if (o.vertexBuffer != null) {
+		gl.bindBuffer(gl.ARRAY_BUFFER, o.vertexBuffer);
+		gl.vertexAttribPointer(shaderProgram.vPositionAttr, 3, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(shaderProgram.vPositionAttr);  
+		}
+	else {
+		alert("o.vertexBuffer == null");
+		return;
+		}
+
+	if (o.colorBuffer != null) {
+		gl.bindBuffer(gl.ARRAY_BUFFER, o.colorBuffer);
+		gl.vertexAttribPointer(shaderProgram.vColorAttr, 4, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(shaderProgram.vColorAttr);
+		}
+	else {
+		alert("o.colorBuffer == null");
+  		return;
+		}
+	// Desenha as coordenadas.	
+	gl.drawArrays(gl.LINES, 0, o.numItems);
+}
