@@ -2,6 +2,8 @@ var gl;
 var shaderBaseImage	= null;
 var shaderAxis		= null;
 var axis 			= null;
+var cube 			= null;
+var triangle		= null;
 var baseTexture		= null;
 
 var video, 
@@ -13,7 +15,7 @@ var imageData,
 	detector, 
 	posit;
 
-var modelSize 	= 90.0; //millimeters
+var modelSize 	= 10.0; //millimeters
 
 var rotMat 		= new Matrix4();
 var transMat 	= new Matrix4();
@@ -290,7 +292,7 @@ function drawAxis(o, shaderProgram, MVPMat) {
 		}
 	else {
 		alert("o.colorBuffer == null");
-  		return;
+  		// return;
 		}
 
 	gl.drawArrays(gl.LINES, 0, o.numItems);
@@ -343,6 +345,10 @@ var MVPMat 	= new Matrix4();
     MVPMat.multiply(modelMat);
 	
 	drawAxis(axis, shaderAxis, MVPMat);
+	if( cube.found )
+		drawCube(cube, shaderSimple, MVPMat);
+	if( triangle.found )
+		drawTriangle(triangle, shaderSimple, MVPMat);
 }
 
 // ********************************************************
@@ -421,12 +427,37 @@ function webGLStart() {
 		console.log("Error getAttribLocation shaderAxis"); 
 		return;
 		}
+
+	shaderSimple 					= initShaders("simple", gl);	
+	shaderSimple.vPositionAttr 		= gl.getAttribLocation(shaderSimple, "aVertexPosition");	
+	shaderSimple.uMVPMat 			= gl.getUniformLocation(shaderSimple, "uMVPMat");
+
+	if ( shaderSimple.vPositionAttr < 0 	|| 
+			!shaderSimple.uMVPMat	) {
+		console.log("Error getAttribLocation shaderAxis"); 
+		return;
+		}
 		
 	axis = initAxisVertexBuffer();
 	if (!axis) {
 		console.log('Failed to set the AXIS vertex information');
 		return;
 		}
+
+	//Inicia o cubo
+	cube = initCube(gl);
+	cube.found = false;
+	if (!cube) {
+		console.log('Failed to set the information');
+		return;
+		}
+
+	triangle = initTriangle(gl);
+	triangle.found = false;
+	if (!triangle) {
+		console.log('Failed to set the information');
+		return;
+		}	
 		
 	detector 	= new AR.Detector();
 	posit 		= new POS.Posit(modelSize, canvas.width);
@@ -493,6 +524,12 @@ function drawCorners(markers){
 function updateScenes(markers){
   var corners, corner, pose, i;
   
+  	// if(markers[0].id == 1){
+   //      	testee();
+   //   	}
+   	
+   	cube.found = false;
+   	triangle.found = false;
 	if (markers.length > 0) {
 		
 		corners = markers[0].corners;
@@ -503,6 +540,14 @@ function updateScenes(markers){
 			corner.x = corner.x - (canvas.width / 2);
 			corner.y = (canvas.height / 2) - corner.y;
 			}
+		//procura o marcador referente ao obj
+		for(var j = 0;j < markers.length;j++){
+			//console.log(" meu id eh: " + markers[j].id);
+			if(markers[j].id == 2)
+				cube.found = true;		
+			if(markers[j].id == 4)
+				triangle.found = true;
+		}
 		
 		pose = posit.pose(corners);
 		
@@ -518,7 +563,7 @@ function updateScenes(markers){
 		transMat.setIdentity();
 		transMat.translate(pose.bestTranslation[0], pose.bestTranslation[1], -pose.bestTranslation[2]);
 		scaleMat.setIdentity();
-		scaleMat.scale(modelSize, modelSize, modelSize);
+		scaleMat.scale(5, 5, 5);
 		
 		console.log("pose.bestError = " + pose.bestError);
 		console.log("pose.alternativeError = " + pose.alternativeError);

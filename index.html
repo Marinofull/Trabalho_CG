@@ -57,14 +57,40 @@
 	}
 </script>
 
+<script id="simple-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	
+	uniform mat4 uMVPMat;
+		
+	void main(void) {
+		
+ 		gl_Position = uMVPMat * vec4(aVertexPosition.xyz, 1.0);
+	}
+
+</script>
+
+<script id="simple-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	void main(void) {
+		gl_FragColor = vec4( 1.0, 1.0, 0.0, 1.0 );
+	}
+</script>
+
+
 <script type="text/javascript" src="lib/webgl-utils.js"></script>
 <script type="text/javascript" src="lib/cuon-matrix.js"></script>
 <script type="text/javascript" src="lib/shaders.js"></script>
+<script type="text/javascript" src="lib/myOBJParser.js"></script>
+<script type="text/javascript" src="lib/MaterialParser.js"></script>
+<script type="text/javascript" src="lib/model2.js"></script>
+<script type="text/javascript" src="lib/model3.js"></script>
 <script type="text/javascript" src="ar-libs/svd.js"></script> 
 <script type="text/javascript" src="ar-libs/posit1.js"></script> 
 <script type="text/javascript" src="ar-libs/cv.js"></script> 
 <script type="text/javascript" src="ar-libs/aruco.js"></script> 
 <script type="text/javascript" src="axis.js"></script>
+
 <style type="text/css">
 	#content {
 		position:absolute;
