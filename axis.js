@@ -3,6 +3,7 @@ var shaderBaseImage	= null;
 var shaderAxis		= null;
 var axis 			= null;
 var cube 			= null;
+var triangle		= null;
 var baseTexture		= null;
 
 var video, 
@@ -346,6 +347,8 @@ var MVPMat 	= new Matrix4();
 	drawAxis(axis, shaderAxis, MVPMat);
 	if( cube.found )
 		drawCube(cube, shaderSimple, MVPMat);
+	if( triangle.found )
+		drawTriangle(triangle, shaderSimple, MVPMat);
 }
 
 // ********************************************************
@@ -445,9 +448,16 @@ function webGLStart() {
 	cube = initCube(gl);
 	cube.found = false;
 	if (!cube) {
-		console.log('Failed to set the AXIS vertex information');
+		console.log('Failed to set the information');
 		return;
 		}
+
+	triangle = initTriangle(gl);
+	triangle.found = false;
+	if (!triangle) {
+		console.log('Failed to set the information');
+		return;
+		}	
 		
 	detector 	= new AR.Detector();
 	posit 		= new POS.Posit(modelSize, canvas.width);
@@ -519,6 +529,7 @@ function updateScenes(markers){
    //   	}
    	
    	cube.found = false;
+   	triangle.found = false;
 	if (markers.length > 0) {
 		
 		corners = markers[0].corners;
@@ -534,6 +545,8 @@ function updateScenes(markers){
 			//console.log(" meu id eh: " + markers[j].id);
 			if(markers[j].id == 2)
 				cube.found = true;		
+			if(markers[j].id == 4)
+				triangle.found = true;
 		}
 		
 		pose = posit.pose(corners);
@@ -550,7 +563,7 @@ function updateScenes(markers){
 		transMat.setIdentity();
 		transMat.translate(pose.bestTranslation[0], pose.bestTranslation[1], -pose.bestTranslation[2]);
 		scaleMat.setIdentity();
-		scaleMat.scale(1.5, 1.5, 1.5);
+		scaleMat.scale(5, 5, 5);
 		
 		console.log("pose.bestError = " + pose.bestError);
 		console.log("pose.alternativeError = " + pose.alternativeError);
