@@ -13,18 +13,7 @@ var imageData,
 	detector, 
 	posit;
 
-var modelShader = null;
-var model 		= new Array;
 var modelSize 	= 90.0; //millimeters
-var scale 		= 1.0;
-var rotate		= 0;
-var perspective	= new Matrix4();
-var transX		= 1.0;
-var transY 		= 1.0;
-var transZ		= 1.0;
-
-var g_objDoc 		= null;	// The information of OBJ file
-var g_drawingInfo 	= null;	// The information for drawing 3D model
 
 var rotMat 		= new Matrix4();
 var transMat 	= new Matrix4();
@@ -112,77 +101,19 @@ function webGLStart() {
 		console.log("Error getAttribLocation shaderAxis"); 
 		return;
 		}
-
-	//Manipulação do novo shader
-	//
-	modelShader 	= initShaders("modelShader", gl);	
-	
-	modelShader.vPositionAttr 	= gl.getAttribLocation(modelShader, "aVertexPosition");		
-	modelShader.vColorAttr 	= gl.getAttribLocation(modelShader, "aVertexColor");
-	modelShader.mvMatrix = new Matrix4();
-	modelShader.mvMatrix.setIdentity();
-	
-	if (modelShader.vPositionAttr < 0 || modelShader.vColorAttr < 0) {
-		console.log("Error getAttribLocation"); 
-		return;
-	}
 		
-	// axis = initAxisVertexBuffer();
-	// if (!axis) {
-	// 	console.log('Failed to set the AXIS vertex information');
-	// 	return;
-	// 	}
-	
-	readOBJFile("modelos/simpleCube.obj", gl, 1, true);
-	
-	var tick = function() {   // Start drawing
-		if (g_objDoc != null && g_objDoc.isMTLComplete()) { // OBJ and all MTLs are available
-			
-			onReadComplete(gl);
-			
-			g_objDoc = null;
-			
-			console.log("BBox = (" 	+ g_drawingInfo.BBox.Min.x + " , " 
-									+ g_drawingInfo.BBox.Min.y + " , " 
-									+ g_drawingInfo.BBox.Min.z + ")");
-			console.log("		(" 	+ g_drawingInfo.BBox.Max.x + " , " 
-									+ g_drawingInfo.BBox.Max.y + " , " 
-									+ g_drawingInfo.BBox.Max.z + ")");
-			console.log("		(" 	+ g_drawingInfo.BBox.Center.x + " , " 
-									+ g_drawingInfo.BBox.Center.y + " , " 
-									+ g_drawingInfo.BBox.Center.z + ")");
-			
-			scale = 1.0 / Math.max( 	Math.max( 	Math.abs(g_drawingInfo.BBox.Max.x - g_drawingInfo.BBox.Min.x), 
-													Math.abs(g_drawingInfo.BBox.Max.y - g_drawingInfo.BBox.Min.y)),
-										Math.abs(g_drawingInfo.BBox.Max.z - g_drawingInfo.BBox.Min.z));
-				
-			axis = initAxisVertexBuffer(1);
-			if (!axis) {
-				console.log('Failed to set the AXIS vertex information');
-				return;
-				}
-			}
-		requestAnimationFrame(tick, canvas);
-		if (model.length > 0) 
-			{
-				detector 	= new AR.Detector();
-				posit 		= new POS.Posit(modelSize, canvas.width);
+	axis = initAxisVertexBuffer();
+	if (!axis) {
+		console.log('Failed to set the AXIS vertex information');
+		return;
+		}
+		
+	detector 	= new AR.Detector();
+	posit 		= new POS.Posit(modelSize, canvas.width);
 
-				rotMat.setIdentity();
-				transMat.setIdentity();
-				animate();
-			}
-		else
-			requestAnimationFrame(tick, canvas);
-		};	
-	tick();
-
-	// detector 	= new AR.Detector();
-	// posit 		= new POS.Posit(modelSize, canvas.width);
-
-	// rotMat.setIdentity();
-	// transMat.setIdentity();
-	// animate();
+	rotMat.setIdentity();
+	transMat.setIdentity();
+	animate();
 }
 
 // ********************************************************
@@ -499,8 +430,6 @@ function drawScene(markers) {
     MVPMat.multiply(modelMat);
 	
 	drawAxis(axis, shaderAxis, MVPMat);
-
-	//we can start here
 }
 
 // ********************************************************
@@ -631,81 +560,3 @@ function drawAxis(o, shaderProgram, MVPMat) {
 	// Desenha as coordenadas.	
 	gl.drawArrays(gl.LINES, 0, o.numItems);
 }
-
-////To get the object
-
-// ********************************************************
-// ********************************************************
-// Read a file
-function readOBJFile(fileName, gl, scale, reverse) {
-	var request = new XMLHttpRequest();
-	
-	request.onreadystatechange = function() {
-		if (request.readyState === 4 && request.status !== 404) 
-			onReadOBJFile(request.responseText, fileName, gl, scale, reverse);
-		}
-	request.open('GET', fileName, true); // Create a request to acquire the file
-	request.send();                      // Send the request
-}
-
-// ********************************************************
-// ********************************************************
-// OBJ File has been read
-function onReadOBJFile(fileString, fileName, gl, scale, reverse) {
-	var objDoc = new OBJDoc(fileName);	// Create a OBJDoc object
-	var result = objDoc.parse(fileString, scale, reverse);	// Parse the file
-	
-	if (!result) {
-		g_objDoc 		= null; 
-		g_drawingInfo 	= null;
-		console.log("OBJ file parsing error.");
-		return;
-		}
-		
-	g_objDoc = objDoc;
-}
-
-// ********************************************************
-// ********************************************************
-// OBJ File has been read compleatly
-function onReadComplete(gl) {
-	
-	var groupModel = null;
-
-	g_drawingInfo 	= g_objDoc.getDrawingInfo();
-	
-	for(var o = 0; o < g_drawingInfo.numObjects; o++) {
-		
-		groupModel = new Object();
-
-		groupModel.vertexBuffer = gl.createBuffer();
-		if (groupModel.vertexBuffer) {		
-			gl.bindBuffer(gl.ARRAY_BUFFER, groupModel.vertexBuffer);
-			gl.bufferData(gl.ARRAY_BUFFER, g_drawingInfo.vertices[o], gl.STATIC_DRAW);
-			}
-		else
-			alert("ERROR: can not create vertexBuffer");
-	
-		groupModel.colorBuffer = gl.createBuffer();
-		if (groupModel.colorBuffer) {		
-			gl.bindBuffer(gl.ARRAY_BUFFER, groupModel.colorBuffer);
-			gl.bufferData(gl.ARRAY_BUFFER, g_drawingInfo.colors[o], gl.STATIC_DRAW);
-			}
-		else
-			alert("ERROR: can not create colorBuffer");
-
-		groupModel.indexBuffer = gl.createBuffer();
-		if (groupModel.indexBuffer) {		
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, groupModel.indexBuffer);
-			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, g_drawingInfo.indices[o], gl.STATIC_DRAW);
-			}
-		else
-			alert("ERROR: can not create indexBuffer");
-		
-		groupModel.numObjects = g_drawingInfo.indices[o].length;
-		model.push(groupModel);
-		}
-}
-
-// ********************************************************
-// ********************************************************
