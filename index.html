@@ -30,7 +30,7 @@
 		}
 </script>
 
-<script id="Axis-vs" type="x-shader/x-vertex">
+<script id="AxisCube-vs" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec4 aVertexColor;
 	
@@ -47,7 +47,7 @@
 
 </script>
 
-<script id="Axis-fs" type="x-shader/x-fragment">
+<script id="AxisCube-fs" type="x-shader/x-fragment">
 	precision mediump float;
 		
 	varying vec4 vColor;
@@ -57,7 +57,7 @@
 	}
 </script>
 
-<script id="simple-vs" type="x-shader/x-vertex">
+<script id="modelCube-vs" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec4 aVertexColor;
 
@@ -71,14 +71,66 @@
 
 </script>
 
-<script id="simple-fs" type="x-shader/x-fragment">
+<script id="modelCube-fs" type="x-shader/x-fragment">
 	precision mediump float;
 	
 	varying vec4 vColor;
 
 	void main(void) {
-		//gl_FragColor = vec4( 1.0, 1.0, 0.0, 1.0 );
-		 gl_FragColor = vColor;
+		gl_FragColor = vec4( 1.0, 1.0, 0.0, 1.0 );
+		// gl_FragColor = vColor;
+	}
+</script>
+
+<script id="AxisPyramid-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+	
+	uniform mat4 uMVPMat;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		
+ 		gl_Position = uMVPMat * vec4(aVertexPosition.xyz, 1.0);
+ 		
+		vColor = aVertexColor;
+	}
+
+</script>
+
+<script id="AxisPyramid-fs" type="x-shader/x-fragment">
+	precision mediump float;
+		
+	varying vec4 vColor;
+		
+	void main(void) {
+		gl_FragColor = vColor;
+	}
+</script>
+
+<script id="modelPyramid-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec4 aVertexColor;
+
+	uniform mat4 uMVPMat;
+	varying vec4 vColor;
+		
+	void main(void) {
+		
+ 		gl_Position = uMVPMat * vec4(aVertexPosition.xyz, 1.0);
+	}
+
+</script>
+
+<script id="modelPyramid-fs" type="x-shader/x-fragment">
+	precision mediump float;
+	
+	varying vec4 vColor;
+
+	void main(void) {
+		gl_FragColor = vec4( 1.0, 1.0, 0.0, 1.0 );
+		// gl_FragColor = vColor;
 	}
 </script>
 
@@ -87,7 +139,7 @@
 <script type="text/javascript" src="lib/cuon-matrix.js"></script>
 <script type="text/javascript" src="lib/shaders.js"></script>
 <script type="text/javascript" src="lib/myOBJParser.js"></script>
-<script type="text/javascript" src="lib/MaterialParser.js"></script>
+<script type="text/javascript" src="lib/materialParser.js"></script>
 <script type="text/javascript" src="lib/model2.js"></script>
 <script type="text/javascript" src="lib/model3.js"></script>
 <script type="text/javascript" src="ar-libs/svd.js"></script> 

@@ -1,10 +1,16 @@
 var gl;
 var shaderBaseImage	= null;
-var shaderAxis		= null;
+var shaderAxisCube		= null;
 var axis 			= null;
 var cube 			= null;
-var triangle		= null;
+var pyramid		= null;
 var baseTexture		= null;
+
+var harlemShake = false;	//responsible for the intaraction
+var harlemShakeMax = 40,
+	harlemShakeMin = -40,
+	harlemShakeStage = true;
+var interactionCoefficient = 0;
 
 var video, 
 	videoImage, 
@@ -75,9 +81,9 @@ function initGL(canvas) {
 // ********************************************************
 function initBaseImage() {
 	
-var baseImage = new Object(); 
-var vPos = new Array;
-var vTex = new Array;
+	var baseImage = new Object(); 
+	var vPos = new Array;
+	var vTex = new Array;
 
 	vPos.push(-1.0); 	// V0
 	vPos.push(-1.0);
@@ -136,11 +142,11 @@ var vTex = new Array;
 // ********************************************************
 // ********************************************************
 
-function initAxisVertexBuffer() {
+function initAxisVertexBuffer(markers) {
 
-var axis	= new Object(); // Utilize Object object to return multiple buffer objects
-var vPos 	= new Array;
-var vColor 	= new Array;
+	var axis	= new Object(); // Utilize Object object to return multiple buffer objects
+	var vPos 	= new Array;
+	var vColor 	= new Array;
 
 	// X Axis
 	// V0
@@ -302,10 +308,13 @@ function drawAxis(o, shaderProgram, MVPMat) {
 // ********************************************************
 function drawScene(markers) {
 	
-var modelMat = new Matrix4();
+var modelMat  = new Matrix4();
+var modelMatT = new Matrix4();
 var ViewMat = new Matrix4();
+var ViewMatT = new Matrix4();
 var ProjMat = new Matrix4();
 var MVPMat 	= new Matrix4();
+var MVPMatT	= new Matrix4();
 
 
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -344,11 +353,52 @@ var MVPMat 	= new Matrix4();
     MVPMat.multiply(ViewMat);
     MVPMat.multiply(modelMat);
 	
-	drawAxis(axis, shaderAxis, MVPMat);
-	if( cube.found )
-		drawCube(cube, shaderSimple, MVPMat);
-	if( triangle.found )
-		drawTriangle(triangle, shaderSimple, MVPMat);
+	modelMatT.setIdentity();
+	modelMatT.multiply(transMat);
+	modelMatT.multiply(rotMat);
+	modelMatT.multiply(scaleMat);
+
+	if(!harlemShake)
+	{
+		pyramid.armengue = false
+		if(cube.found & pyramid.found)
+			pyramid.armengue = true
+		if(pyramid.armengue === true)
+			modelMatT.translate(0,-2,0);
+	}
+
+    //Interação ;P
+    if(harlemShake){
+	    if(harlemShakeStage){
+	    	interactionCoefficient+= 0.1;
+	    	if(interactionCoefficient < harlemShakeMax){
+	    		harlemShakeStage = false;
+	    	}
+	    }
+	    else{
+	    	interactionCoefficient-= 0.1;
+	    	if(interactionCoefficient > harlemShakeMin){
+	    		harlemShakeStage = true;
+	    	}
+	    }
+	    modelMatT.translate(0,interactionCoefficient,0);
+	}
+
+	MVPMatT.setIdentity();
+    MVPMatT.multiply(ProjMat);
+    MVPMatT.multiply(ViewMatT);
+    MVPMatT.multiply(modelMatT);
+
+	if( cube.found ){
+		// drawAxis(axis, shaderAxisCube, MVPMat);
+		drawCube(cube, shaderModelCube, MVPMat);
+	}
+	if( pyramid.found ){
+		// drawAxis(axis, shaderAxisPyramid, MVPMatT);
+		drawPyramid(pyramid, shaderModelPyramid, MVPMatT);
+	}
+	if(!(cube.found | pyramid.found))
+		drawAxis(axis, shaderAxisCube, MVPMat);
 }
 
 // ********************************************************
@@ -415,26 +465,50 @@ function webGLStart() {
 		return;
 		}
 	initTexture();
-			
-	shaderAxis 					= initShaders("Axis", gl);	
-	shaderAxis.vPositionAttr 	= gl.getAttribLocation(shaderAxis, "aVertexPosition");		
-	shaderAxis.vColorAttr		= gl.getAttribLocation(shaderAxis, "aVertexColor");
-	shaderAxis.uMVPMat 			= gl.getUniformLocation(shaderAxis, "uMVPMat");
 	
-	if (	shaderAxis.vPositionAttr < 0 	|| 
-			shaderAxis.vColorAttr < 0 		|| 
-			!shaderAxis.uMVPMat	) {
-		console.log("Error getAttribLocation shaderAxis"); 
+	//starts to initialize the Cube's shaders
+	shaderAxisCube 					= initShaders("AxisCube", gl);	
+	shaderAxisCube.vPositionAttr 	= gl.getAttribLocation(shaderAxisCube, "aVertexPosition");		
+	shaderAxisCube.vColorAttr		= gl.getAttribLocation(shaderAxisCube, "aVertexColor");
+	shaderAxisCube.uMVPMat 			= gl.getUniformLocation(shaderAxisCube, "uMVPMat");
+	
+	if (	shaderAxisCube.vPositionAttr < 0 	|| 
+			shaderAxisCube.vColorAttr < 0 		|| 
+			!shaderAxisCube.uMVPMat	) {
+		console.log("Error getAttribLocation shaderAxisCube"); 
 		return;
 		}
 
-	shaderSimple 					= initShaders("simple", gl);	
-	shaderSimple.vPositionAttr 		= gl.getAttribLocation(shaderSimple, "aVertexPosition");	
-	shaderSimple.uMVPMat 			= gl.getUniformLocation(shaderSimple, "uMVPMat");
+	shaderModelCube 					= initShaders("modelCube", gl);	
+	shaderModelCube.vPositionAttr 		= gl.getAttribLocation(shaderModelCube, "aVertexPosition");	
+	shaderModelCube.uMVPMat 			= gl.getUniformLocation(shaderModelCube, "uMVPMat");
 
-	if ( shaderSimple.vPositionAttr < 0 	|| 
-			!shaderSimple.uMVPMat	) {
-		console.log("Error getAttribLocation shaderAxis"); 
+	if ( shaderModelCube.vPositionAttr < 0 	|| 
+			!shaderModelCube.uMVPMat	) {
+		console.log("Error getAttribLocation shaderModelCube"); 
+		return;
+		}
+
+	//starts to initialize the Pyramid's shaders
+	shaderAxisPyramid 					= initShaders("AxisPyramid", gl);	
+	shaderAxisPyramid.vPositionAttr 	= gl.getAttribLocation(shaderAxisPyramid, "aVertexPosition");		
+	shaderAxisPyramid.vColorAttr		= gl.getAttribLocation(shaderAxisPyramid, "aVertexColor");
+	shaderAxisPyramid.uMVPMat 			= gl.getUniformLocation(shaderAxisPyramid, "uMVPMat");
+	
+	if (	shaderAxisPyramid.vPositionAttr < 0 	|| 
+			shaderAxisPyramid.vColorAttr < 0 		|| 
+			!shaderAxisPyramid.uMVPMat	) {
+		console.log("Error getAttribLocation shaderAxisPyramid"); 
+		return;
+		}
+
+	shaderModelPyramid 					= initShaders("modelPyramid", gl);	
+	shaderModelPyramid.vPositionAttr 		= gl.getAttribLocation(shaderModelPyramid, "aVertexPosition");	
+	shaderModelPyramid.uMVPMat 			= gl.getUniformLocation(shaderModelPyramid, "uMVPMat");
+
+	if ( shaderModelPyramid.vPositionAttr < 0 	|| 
+			!shaderModelPyramid.uMVPMat	) {
+		console.log("Error getAttribLocation shaderModelPyramid"); 
 		return;
 		}
 		
@@ -452,9 +526,9 @@ function webGLStart() {
 		return;
 		}
 
-	triangle = initTriangle(gl);
-	triangle.found = false;
-	if (!triangle) {
+	pyramid = initTriangle(gl);
+	pyramid.found = false;
+	if (!pyramid) {
 		console.log('Failed to set the information');
 		return;
 		}	
@@ -522,16 +596,16 @@ function drawCorners(markers){
 // ********************************************************
 // ********************************************************
 function updateScenes(markers){
-  var corners, corner, pose, i;
+  var corners, corner, pose, i, j;
   
-  	// if(markers[0].id == 1){
-   //      	testee();
-   //   	}
    	
    	cube.found = false;
-   	triangle.found = false;
+   	pyramid.found = false;
+   	harlemShake = false;
 	if (markers.length > 0) {
 		
+	// for(j=0; j < markers.length; j++)	
+	// 	{corners = markers[j].corners;
 		corners = markers[0].corners;
 		
 		for (i = 0; i < corners.length; ++ i) {
@@ -543,10 +617,12 @@ function updateScenes(markers){
 		//procura o marcador referente ao obj
 		for(var j = 0;j < markers.length;j++){
 			//console.log(" meu id eh: " + markers[j].id);
-			if(markers[j].id == 3)
+			if(markers[j].id == 2)
 				cube.found = true;		
-			if(markers[j].id == 5)
-				triangle.found = true;
+			if(markers[j].id == 4)
+				pyramid.found = true;
+			if(markers[j].id == 3)
+				harlemShake = true;
 		}
 		
 		pose = posit.pose(corners);
@@ -563,11 +639,11 @@ function updateScenes(markers){
 		transMat.setIdentity();
 		transMat.translate(pose.bestTranslation[0], pose.bestTranslation[1], -pose.bestTranslation[2]);
 		scaleMat.setIdentity();
-		scaleMat.scale(5, 5, 5);
+		scaleMat.scale(8, 8, 8);
 		
 		console.log("pose.bestError = " + pose.bestError);
-		console.log("pose.alternativeError = " + pose.alternativeError);
-		}
+		console.log("pose.alternativeError = " + pose.alternativeError);}
+		// }
 	else {
 		transMat.setIdentity();
 		rotMat.setIdentity();
