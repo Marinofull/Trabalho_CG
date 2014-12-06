@@ -543,9 +543,9 @@ function updateScenes(markers){
 		//procura o marcador referente ao obj
 		for(var j = 0;j < markers.length;j++){
 			//console.log(" meu id eh: " + markers[j].id);
-			if(markers[j].id == 2)
+			if(markers[j].id == 3)
 				cube.found = true;		
-			if(markers[j].id == 4)
+			if(markers[j].id == 5)
 				triangle.found = true;
 		}
 		
