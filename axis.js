@@ -1,16 +1,22 @@
 var gl;
 var shaderBaseImage	= null;
-var shaderAxisCube		= null;
+var shaderAxisCube	= null;
 var axis 			= null;
 var cube 			= null;
-var pyramid		= null;
+var pyramid			= null;
 var baseTexture		= null;
 
-var harlemShake = false;	//responsible for the intaraction
-var harlemShakeMax = 40,
-	harlemShakeMin = -40,
-	harlemShakeStage = true;
-var interactionCoefficient = 0;
+var idCube =  2,//Id do marker que gera o cubo
+	idPyramid = 4,//Id do marker que gera a pirâmide
+	idIntaraction = 3;//Id do marker que dispara a interação
+
+var interaction = false;	//responsaveis pela interação
+var interactionMax = 2.0,
+	interactionMin = -2.0,
+	interactionStage = true;
+var interactionCoefficient = 0.0;
+// var audio = new Audio('audio.mp3');
+// var played= false;
 
 var video, 
 	videoImage, 
@@ -74,6 +80,7 @@ function initGL(canvas) {
 	gl.viewportHeight 	= canvas.height;
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	// gl.enable(gl.DEPTH_TEST);
 	return gl;
 }
 
@@ -358,43 +365,21 @@ var MVPMatT	= new Matrix4();
 	modelMatT.multiply(rotMat);
 	modelMatT.multiply(scaleMat);
 
-	if(!harlemShake)
-	{
-		pyramid.armengue = false
-		if(cube.found & pyramid.found)
-			pyramid.armengue = true
-		if(pyramid.armengue === true)
-			modelMatT.translate(0,-2,0);
-	}
-
-    //Interação ;P
-    if(harlemShake){
-	    if(harlemShakeStage){
-	    	interactionCoefficient+= 0.1;
-	    	if(interactionCoefficient < harlemShakeMax){
-	    		harlemShakeStage = false;
-	    	}
-	    }
-	    else{
-	    	interactionCoefficient-= 0.1;
-	    	if(interactionCoefficient > harlemShakeMin){
-	    		harlemShakeStage = true;
-	    	}
-	    }
-	    modelMatT.translate(0,interactionCoefficient,0);
-	}
+	//Tenta fazer a interação se o marcador for encontrado
+	modelMatT.set(doInteraction(modelMatT));
 
 	MVPMatT.setIdentity();
     MVPMatT.multiply(ProjMat);
     MVPMatT.multiply(ViewMatT);
     MVPMatT.multiply(modelMatT);
 
+    //Verifica se os marcadores estão presentes para fazer o desenho
 	if( cube.found ){
-		// drawAxis(axis, shaderAxisCube, MVPMat);
+		drawAxis(axis, shaderAxisCube, MVPMat);
 		drawCube(cube, shaderModelCube, MVPMat);
 	}
 	if( pyramid.found ){
-		// drawAxis(axis, shaderAxisPyramid, MVPMatT);
+		drawAxis(axis, shaderAxisPyramid, MVPMatT);
 		drawPyramid(pyramid, shaderModelPyramid, MVPMatT);
 	}
 	if(!(cube.found | pyramid.found))
@@ -526,6 +511,7 @@ function webGLStart() {
 		return;
 		}
 
+	//Inicia a Piramide
 	pyramid = initTriangle(gl);
 	pyramid.found = false;
 	if (!pyramid) {
@@ -601,11 +587,9 @@ function updateScenes(markers){
    	
    	cube.found = false;
    	pyramid.found = false;
-   	harlemShake = false;
+   	interaction = false;
 	if (markers.length > 0) {
-		
-	// for(j=0; j < markers.length; j++)	
-	// 	{corners = markers[j].corners;
+
 		corners = markers[0].corners;
 		
 		for (i = 0; i < corners.length; ++ i) {
@@ -617,12 +601,12 @@ function updateScenes(markers){
 		//procura o marcador referente ao obj
 		for(var j = 0;j < markers.length;j++){
 			//console.log(" meu id eh: " + markers[j].id);
-			if(markers[j].id == 2)
+			if(markers[j].id == idCube)
 				cube.found = true;		
-			if(markers[j].id == 4)
+			if(markers[j].id == idPyramid)
 				pyramid.found = true;
-			if(markers[j].id == 3)
-				harlemShake = true;
+			if(markers[j].id == idIntaraction)
+				interaction = true;
 		}
 		
 		pose = posit.pose(corners);
@@ -643,7 +627,6 @@ function updateScenes(markers){
 		
 		console.log("pose.bestError = " + pose.bestError);
 		console.log("pose.alternativeError = " + pose.alternativeError);}
-		// }
 	else {
 		transMat.setIdentity();
 		rotMat.setIdentity();
@@ -653,3 +636,37 @@ function updateScenes(markers){
 		roll 	= 0.0;
 		}
 };
+
+// ********************************************************
+// *doInteraction(o) tenta interagir os modelos************
+// *obtem sucesso quando o terceiro marcador está presente*
+// ********************************************************
+function doInteraction(modelMatT){
+	if(!interaction)
+	{
+		pyramid.armengue = false
+		if(cube.found & pyramid.found)
+			pyramid.armengue = true
+		if(pyramid.armengue === true)
+			modelMatT.translate(0,-2,0);
+	}
+
+    //Interação ;P
+    if(interaction){
+	    if(interactionStage){
+	    	interactionCoefficient+= 0.2;
+	    	if(interactionCoefficient > interactionMax){
+	    		interactionStage = false;
+	    	}
+	    }
+	    else{
+	    	interactionCoefficient-= 0.2;
+	    	if(interactionCoefficient < interactionMin){
+	    		interactionStage = true;
+	    	}
+	    }
+	    modelMatT.translate(0,interactionCoefficient,0);
+	}
+
+	return modelMatT
+}
