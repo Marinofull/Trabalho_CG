@@ -382,8 +382,6 @@ var MVPMatT	= new Matrix4();
 		drawAxis(axis, shaderAxisPyramid, MVPMatT);
 		drawPyramid(pyramid, shaderModelPyramid, MVPMatT);
 	}
-	if(!(cube.found | pyramid.found))
-		drawAxis(axis, shaderAxisCube, MVPMat);
 }
 
 // ********************************************************
@@ -605,8 +603,9 @@ function updateScenes(markers){
 				cube.found = true;		
 			if(markers[j].id == idPyramid)
 				pyramid.found = true;
-			if(markers[j].id == idIntaraction)
+			if(markers[j].id == idIntaraction){
 				interaction = true;
+			}
 		}
 		
 		pose = posit.pose(corners);
@@ -641,18 +640,18 @@ function updateScenes(markers){
 // *doInteraction(o) tenta interagir os modelos************
 // *obtem sucesso quando o terceiro marcador está presente*
 // ********************************************************
-function doInteraction(modelMatT){
+function doInteraction(o){
 	if(!interaction)
 	{
-		pyramid.armengue = false
+		pyramid.adj = false
 		if(cube.found & pyramid.found)
-			pyramid.armengue = true
-		if(pyramid.armengue === true)
-			modelMatT.translate(0,-2,0);
+			pyramid.adj = true
+		if(pyramid.adj === true)
+			o.translate(0,-2,0);
 	}
 
     //Interação ;P
-    if(interaction){
+    if(interaction & pyramid.found & cube.found){
 	    if(interactionStage){
 	    	interactionCoefficient+= 0.2;
 	    	if(interactionCoefficient > interactionMax){
@@ -665,8 +664,8 @@ function doInteraction(modelMatT){
 	    		interactionStage = true;
 	    	}
 	    }
-	    modelMatT.translate(0,interactionCoefficient,0);
+	    o.translate(0,interactionCoefficient,0);
 	}
 
-	return modelMatT
+	return o
 }
